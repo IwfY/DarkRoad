@@ -70,10 +70,23 @@ function Car(engine, lane, id) {
 	this.lane = lane;
 	this.coordinates = {'x': this.lane.start.x, 'y': this.lane.start.y + 2, 'z': this.lane.start.z};
 	this.speed = this.lane.speed;
+	this.lightingUp = null;
 }
 
 Car.prototype.drawInit = function(g) {
-	var color = this.lane.runsTowardsCamera() === true ? 'white' : 'red';
+	var color = '';
+	if (this.lane.runsTowardsCamera() === true) {
+		color = 'white';
+		var randomInt = getRandomInt(0, 10)
+		if (randomInt === 8) {
+			color = '#CFF5FF'; // bluish
+		} else if (randomInt === 9) {
+			color = '#FDFDBA'; // yellowish
+		}
+	} else {
+		color = 'red';
+	}
+
 	this.leftLightElement = g.append('circle').attr('id', 'car' + this.id + '_l').attr('cx', -1).attr('cy', -1).attr('r', 10).attr('fill', color);
 	this.rightLightElement = g.append('circle').attr('id', 'car' + this.id + '_r').attr('cx', -1).attr('cy', -1).attr('r', 10).attr('fill', color);
 }
@@ -88,6 +101,23 @@ Car.prototype.update = function(g) {
 	var rightScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x + 3, this.coordinates.y, this.coordinates.z);
 	var r = (rightScreenCoords[0] - leftScreenCoords[0]) / 10;
 
+	// lighting up
+	var randomInt = getRandomInt(0, 9000);
+	if (this.lightingUp === null && randomInt === 9 && this.lane.runsTowardsCamera()) {
+		this.lightingUp = 0;
+	}
+
+	if (this.lightingUp !== null) {
+		if (this.lightingUp < 5 || this.lightingUp > 7) {
+			r = r * 2;
+		}
+		++this.lightingUp;
+		if (this.lightingUp === 11) {
+			this.lightingUp = null;
+		}
+	}
+
+	// move elements
 	this.leftLightElement.attr('cx', leftScreenCoords[0]).attr('cy', leftScreenCoords[1]).attr('r', r);
 	this.rightLightElement.attr('cx', rightScreenCoords[0]).attr('cy', rightScreenCoords[1]).attr('r', r);
 
@@ -186,7 +216,7 @@ function DarkRoad() {
 	lane4.drawInit(this.g);
 	this.lanes.push(lane4);
 
-	var lane5 = new Lane(this, {'x': 30, 'y': laneHeight, 'z': 1300}, {'x': 180, 'y': laneHeight, 'z': 200});
+	var lane5 = new Lane(this, {'x': 30, 'y': laneHeight, 'z': 1300}, {'x': 480, 'y': laneHeight, 'z': 100});
 	lane5.speed = lane5.speed - 1.5;
 	lane5.drawInit(this.g);
 	this.lanes.push(lane5);
