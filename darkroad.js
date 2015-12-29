@@ -1,13 +1,10 @@
 document.addEventListener("DOMContentLoaded", init, false);
 
-window.darkRoad = {};
-window.darkRoad.screenWidth = 1600;
-window.darkRoad.screenHeight = 900;
-
 /**
  * Lane
  **/
-function Lane(start, end) {
+function Lane(engine, start, end) {
+	this.engine = engine;
 	this.start = start;
 	this.end = end;
 	this.speed = 3;
@@ -20,10 +17,10 @@ function Lane(start, end) {
 
 
 Lane.prototype.drawInit = function(g) {
-	var start1ScreenCoords = worldToScreen(window.darkRoad.screenWidth, window.darkRoad.screenHeight, this.start.x - 7, this.start.y, this.start.z);
-	var start2ScreenCoords = worldToScreen(window.darkRoad.screenWidth, window.darkRoad.screenHeight, this.start.x + 7, this.start.y, this.start.z);
-	var end1ScreenCoords = worldToScreen(window.darkRoad.screenWidth, window.darkRoad.screenHeight, this.end.x + 7, this.end.y, this.end.z);
-	var end2ScreenCoords = worldToScreen(window.darkRoad.screenWidth, window.darkRoad.screenHeight, this.end.x - 7, this.end.y, this.end.z);
+	var start1ScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.start.x - 7, this.start.y, this.start.z);
+	var start2ScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.start.x + 7, this.start.y, this.start.z);
+	var end1ScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.end.x + 7, this.end.y, this.end.z);
+	var end2ScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.end.x - 7, this.end.y, this.end.z);
 
 	var pointsString = start1ScreenCoords[0] + ',' + start1ScreenCoords[1] + ' ' + start2ScreenCoords[0] + ',' + start2ScreenCoords[1] + ' ' + end1ScreenCoords[0] + ',' + end1ScreenCoords[1] + ' ' + end2ScreenCoords[0] + ',' + end2ScreenCoords[1];
 
@@ -87,8 +84,8 @@ Car.prototype.remove = function(g) {
 }
 
 Car.prototype.update = function(g) {
-	var leftScreenCoords = worldToScreen(window.darkRoad.screenWidth, window.darkRoad.screenHeight, this.coordinates.x - 3, this.coordinates.y, this.coordinates.z);
-	var rightScreenCoords = worldToScreen(window.darkRoad.screenWidth, window.darkRoad.screenHeight, this.coordinates.x + 3, this.coordinates.y, this.coordinates.z);
+	var leftScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x - 3, this.coordinates.y, this.coordinates.z);
+	var rightScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x + 3, this.coordinates.y, this.coordinates.z);
 	var r = (rightScreenCoords[0] - leftScreenCoords[0]) / 10;
 
 	this.leftLightElement.attr('cx', leftScreenCoords[0]).attr('cy', leftScreenCoords[1]).attr('r', r);
@@ -117,7 +114,7 @@ function worldToScreen(screenWidth, screenHeight, x, y, z) {
 		eyeZ = -1;
 
 	if (z - eyeZ === 0) {
-		return null;
+		return [-100, -100];
 	}
 
 	a = Math.abs(eyeZ) * x / Math.abs(z - eyeZ);
@@ -153,47 +150,53 @@ function DarkRoad() {
 	this.lanes = [];
 	this.lastLane = 0;
 
+	this.screenWidth = d3.select('#dark-road').style('width').replace("px", "") - 10;
+	this.screenHeight = d3.select('#dark-road').style('height').replace("px", "") - 10;
+
 	d3.select('#dark-road').style({'background-color':'black'});
 	this.g = d3.select('#dark-road').append('svg').append('g');
 	var sky = this.g.append('rect')
 			.attr('x', 0)
 			.attr('y', 0)
-			.attr('width', window.darkRoad.screenWidth)
-			.attr('height', window.darkRoad.screenHeight / 2)
+			.attr('width', this.screenWidth)
+			.attr('height', this.screenHeight / 2)
 			.attr('fill', '#000009');
 
 	// add lanes
 	var laneHeight = -50;
 
-	var lane1 = new Lane({'x': -28, 'y': laneHeight, 'z': 0}, {'x': -28, 'y': laneHeight, 'z': 1500});
+	var horizon = worldToScreen(this.screenWidth, this.screenHeight, 0, laneHeight, 1500);
+	sky.attr('height', horizon[1]);
+
+	var lane1 = new Lane(this, {'x': -28, 'y': laneHeight, 'z': -10}, {'x': -28, 'y': laneHeight, 'z': 1500});
 	lane1.drawInit(this.g);
 	this.lanes.push(lane1);
 
-	var lane2 = new Lane({'x': -12, 'y': laneHeight, 'z': 0}, {'x': -12, 'y': laneHeight, 'z': 1500});
+	var lane2 = new Lane(this, {'x': -12, 'y': laneHeight, 'z': -10}, {'x': -12, 'y': laneHeight, 'z': 1500});
 	lane2.speed = lane2.speed + 2;
 	lane2.drawInit(this.g);
 	this.lanes.push(lane2);
 
-	var lane3 = new Lane({'x': 14, 'y': laneHeight, 'z': 1500}, {'x': 14, 'y': laneHeight, 'z': 0});
+	var lane3 = new Lane(this, {'x': 14, 'y': laneHeight, 'z': 1500}, {'x': 14, 'y': laneHeight, 'z': -10});
 	lane3.speed = lane3.speed + 2;
 	lane3.drawInit(this.g);
 	this.lanes.push(lane3);
 
-	var lane4 = new Lane({'x': 30, 'y': laneHeight, 'z': 1500}, {'x': 30, 'y': laneHeight, 'z': 0});
+	var lane4 = new Lane(this, {'x': 30, 'y': laneHeight, 'z': 1500}, {'x': 30, 'y': laneHeight, 'z': -10});
 	lane4.drawInit(this.g);
 	this.lanes.push(lane4);
 
-	var lane5 = new Lane({'x': 30, 'y': laneHeight, 'z': 1300}, {'x': 180, 'y': laneHeight, 'z': 200});
+	var lane5 = new Lane(this, {'x': 30, 'y': laneHeight, 'z': 1300}, {'x': 180, 'y': laneHeight, 'z': 200});
 	lane5.speed = lane5.speed - 1.5;
 	lane5.drawInit(this.g);
 	this.lanes.push(lane5);
 
-	var lane6 = new Lane({'x': -220, 'y': laneHeight, 'z': 0}, {'x': -520, 'y': laneHeight, 'z': 1500});
+	var lane6 = new Lane(this, {'x': -220, 'y': laneHeight, 'z': -10}, {'x': -520, 'y': laneHeight, 'z': 1500});
 	lane6.speed = lane6.speed - 1.5;
 	lane6.drawInit(this.g);
 	this.lanes.push(lane6);
 
-	var lane7 = new Lane({'x': -500, 'y': laneHeight, 'z': 1500}, {'x': -200, 'y': laneHeight, 'z': 0});
+	var lane7 = new Lane(this, {'x': -500, 'y': laneHeight, 'z': 1500}, {'x': -200, 'y': laneHeight, 'z': -10});
 	lane7.speed = lane7.speed - 1.5;
 	lane7.drawInit(this.g);
 	this.lanes.push(lane7);
