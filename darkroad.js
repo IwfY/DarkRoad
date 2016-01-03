@@ -62,6 +62,42 @@ Lane.prototype.getNormalizedVector = function() {
 
 
 /**
+ * Light
+ **/
+function Light(car, name, relativePosition, color) {
+	this.car = car;
+	this.name = name;
+	this.relativePosition = relativePosition;
+	this.color = color;
+	this.radius = 0.6;
+	this.sequence = null;
+	this.element = null;
+}
+
+Light.prototype.drawInit = function(g) {
+	this.element = g.append('circle').attr('id', 'car' + this.car.id + '_' + this.name).attr('cx', -1).attr('cy', -1).attr('r', 1).attr('fill', this.color);
+}
+
+Light.prototype.update = function() {
+	var coords = worldToScreen(this.car.engine.screenWidth, this.car.engine.screenHeight,
+		this.car.coordinates.x + this.relativePosition.x,
+		this.car.coordinates.y + this.relativePosition.y,
+		this.car.coordinates.z + this.relativePosition.z);
+
+	var radiusCoords = worldToScreen(this.car.engine.screenWidth, this.car.engine.screenHeight,
+		this.car.coordinates.x + this.relativePosition.x + this.radius,
+		this.car.coordinates.y + this.relativePosition.y,
+		this.car.coordinates.z + this.relativePosition.z);
+
+	this.element.attr('cx', coords[0]).attr('cy', coords[1]).attr('r', Math.abs(coords[0] - radiusCoords[0]));
+}
+
+Light.prototype.remove = function() {
+	this.element.remove();
+}
+
+
+/**
  * Car
  **/
 function Car(engine, lane, id) {
@@ -71,9 +107,114 @@ function Car(engine, lane, id) {
 	this.coordinates = {'x': this.lane.start.x, 'y': this.lane.start.y + 2, 'z': this.lane.start.z};
 	this.speed = this.lane.speed;
 	this.lightingUp = null;
+	this.lights = [];
+	this.frontLights = [];
 }
 
-Car.prototype.drawInit = function(g) {
+Car.prototype.drawInit = function(g) {if (this.lane.runsTowardsCamera() === true) {
+		var color = '';
+		if (this.lane.runsTowardsCamera() === true) {
+			color = 'white';
+			var randomInt = getRandomInt(0, 10)
+			if (randomInt === 8) {
+				color = '#CFF5FF'; // bluish
+			} else if (randomInt === 9) {
+				color = '#FDFDBA'; // yellowish
+			}
+		}
+
+		var leftLight = new Light(this, 'left', {'x': -3, 'y': 0, 'z': -3}, color);
+		leftLight.drawInit(g);
+		this.lights.push(leftLight);
+		this.frontLights.push(leftLight);
+
+		var rightLight = new Light(this, 'left', {'x': 3, 'y': 0, 'z': -3}, color);
+		rightLight.drawInit(g);
+		this.lights.push(rightLight);
+		this.frontLights.push(rightLight);
+	}
+
+	else {
+		var color = 'red';
+
+		var leftLight = new Light(this, 'left', {'x': -3, 'y': 0, 'z': -3}, color);
+		leftLight.drawInit(g);
+		this.lights.push(leftLight);
+
+		var rightLight = new Light(this, 'left', {'x': 3, 'y': 0, 'z': -3}, color);
+		rightLight.drawInit(g);
+		this.lights.push(rightLight);
+	}
+}
+
+Car.prototype.remove = function(g) {
+	var i;
+	for (i = 0; i < this.lights.length; ++i) {
+		this.lights[i].remove();
+	}
+}
+
+Car.prototype.update = function(g) {
+	var i;
+	var side = this.flashCount >= 0 ? 1 : -1;
+
+	// lighting up
+	var randomInt = getRandomInt(0, 9000);
+	if (this.lightingUp === null && randomInt === 9 && this.lane.runsTowardsCamera()) {
+		this.lightingUp = 0;
+	}
+
+	if (this.lightingUp !== null) {
+		if (this.lightingUp < 5 || this.lightingUp > 7) {
+			for (i = 0; i < this.frontLights.length; ++i) {
+				this.frontLights[i].radius = 1.2;
+			}
+		} else {
+			for (i = 0; i < this.frontLights.length; ++i) {
+				this.frontLights[i].radius = 0.6;
+			}
+		}
+		++this.lightingUp;
+		if (this.lightingUp === 11) {
+			this.lightingUp = null;
+			for (i = 0; i < this.frontLights.length; ++i) {
+				this.frontLights[i].radius = 0.6;
+			}
+		}
+	}
+
+	// move elements
+	for (i = 0; i < this.lights.length; ++i) {
+		this.lights[i].update();
+	}
+
+	this.coordinates.x = this.coordinates.x + this.speed * this.lane.getNormalizedVector().x;
+	this.coordinates.y = this.coordinates.y + this.speed * this.lane.getNormalizedVector().y;
+	this.coordinates.z = this.coordinates.z + this.speed * this.lane.getNormalizedVector().z;
+
+	var normalizedVectorZ = this.lane.getNormalizedVector().z;
+	if ((this.coordinates.z - this.lane.end.z) / Math.abs(this.coordinates.z - this.lane.end.z) === normalizedVectorZ / Math.abs(normalizedVectorZ)) {
+		this.engine.removeCar(this);
+	}
+
+}
+
+
+/**
+ * Police Car
+ **/
+function PoliceCar(engine, lane, id) {
+	this.engine = engine;
+	this.id = id;
+	this.lane = lane;
+	this.coordinates = {'x': this.lane.start.x, 'y': this.lane.start.y + 2, 'z': this.lane.start.z};
+	this.speed = this.lane.speed;
+	this.lightingUp = null;
+	this.lights = [];
+	this.flashCount = 10;
+}
+
+PoliceCar.prototype.drawInit = function(g) {
 	var color = '';
 	if (this.lane.runsTowardsCamera() === true) {
 		color = 'white';
@@ -89,16 +230,20 @@ Car.prototype.drawInit = function(g) {
 
 	this.leftLightElement = g.append('circle').attr('id', 'car' + this.id + '_l').attr('cx', -1).attr('cy', -1).attr('r', 10).attr('fill', color);
 	this.rightLightElement = g.append('circle').attr('id', 'car' + this.id + '_r').attr('cx', -1).attr('cy', -1).attr('r', 10).attr('fill', color);
+	this.flashLightElement = g.append('circle').attr('id', 'car' + this.id + '_flash').attr('cx', -1).attr('cy', -1).attr('r', 10).attr('fill', 'blue');
 }
 
-Car.prototype.remove = function(g) {
+PoliceCar.prototype.remove = function(g) {
 	this.leftLightElement.remove();
 	this.rightLightElement.remove();
+	this.flashLightElement.remove();
 }
 
-Car.prototype.update = function(g) {
+PoliceCar.prototype.update = function(g) {
+	var side = this.flashCount >= 0 ? 1 : -1;
 	var leftScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x - 3, this.coordinates.y, this.coordinates.z);
 	var rightScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x + 3, this.coordinates.y, this.coordinates.z);
+	var flashScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x + (3 * side), this.coordinates.y + 3, this.coordinates.z);
 	var r = (rightScreenCoords[0] - leftScreenCoords[0]) / 10;
 
 	// lighting up
@@ -120,6 +265,7 @@ Car.prototype.update = function(g) {
 	// move elements
 	this.leftLightElement.attr('cx', leftScreenCoords[0]).attr('cy', leftScreenCoords[1]).attr('r', r);
 	this.rightLightElement.attr('cx', rightScreenCoords[0]).attr('cy', rightScreenCoords[1]).attr('r', r);
+	this.flashLightElement.attr('cx', flashScreenCoords[0]).attr('cy', flashScreenCoords[1]).attr('r', r * 2);
 
 	this.coordinates.x = this.coordinates.x + this.speed * this.lane.getNormalizedVector().x;
 	this.coordinates.y = this.coordinates.y + this.speed * this.lane.getNormalizedVector().y;
@@ -129,6 +275,9 @@ Car.prototype.update = function(g) {
 	if ((this.coordinates.z - this.lane.end.z) / Math.abs(this.coordinates.z - this.lane.end.z) === normalizedVectorZ / Math.abs(normalizedVectorZ)) {
 		this.engine.removeCar(this);
 	}
+
+	this.flashCount = (this.flashCount < -10) ? 10 : this.flashCount - 1;
+
 }
 
 
@@ -193,7 +342,7 @@ function DarkRoad() {
 			.attr('fill', '#000009');
 
 	// add lanes
-	var laneHeight = -50;
+	var laneHeight = -80;
 
 	var horizon = worldToScreen(this.screenWidth, this.screenHeight, 0, laneHeight, 1500);
 	sky.attr('height', horizon[1]);
@@ -255,7 +404,13 @@ DarkRoad.prototype.addRandomCar = function() {
 	}
 	this.lastLane = laneIndex;
 	var lane = this.lanes[laneIndex];
-	var newCar = new Car(this, lane, this.carCounter);
+
+	var newCar;
+	if (getRandomInt(0, 50) === 9) {
+		newCar = new PoliceCar(this, lane, this.carCounter);
+	} else {
+		newCar = new Car(this, lane, this.carCounter);
+	}
 	newCar.drawInit(this.g);
 
 	this.cars.push(newCar);
@@ -263,7 +418,7 @@ DarkRoad.prototype.addRandomCar = function() {
 }
 
 DarkRoad.prototype.update = function() {
-	if (getRandomInt(0, 30) === 9) {
+	if (getRandomInt(0, 20) === 9) {
 		this.addRandomCar();
 	}
 
