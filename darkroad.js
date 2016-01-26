@@ -281,14 +281,15 @@ PoliceCar.prototype.update = function(g) {
 }
 
 /**
- * Sky
+ * Star
  **/
 function Star(sky) {
 	this.sky = sky;
+	this.stepGranularity = 10000;
 	this.circle = null;
 	this.radius = getRandomInt(0, 15) / 10;
 	this.polarDistance = getRandomInt(5, this.sky.engine.screenWidth);
-	this.runner = getRandomInt(0, 10000) / 10000 * 2 * Math.PI;
+	this.runner = getRandomInt(0, this.stepGranularity) / this.stepGranularity * 2 * Math.PI;
 	this.position = {
 		'x': Math.cos(this.runner) * this.polarDistance,
 		'y': Math.sin(this.runner) * this.polarDistance
@@ -307,11 +308,17 @@ Star.prototype.update = function() {
 	this.position['x'] = Math.cos(this.runner) * this.polarDistance;
 	this.position['y'] = Math.sin(this.runner) * this.polarDistance;
 
+	horizonDistance = Math.abs(this.sky.polarPosition['y'] + this.position['y'] - this.sky.height);
+
+	if (horizonDistance < this.sky.height / 3) {
+		this.circle.attr('opacity', horizonDistance / (this.sky.height / 3));
+	}
+
 	this.circle = this.circle
 		.attr('cx', this.sky.polarPosition['x'] + this.position['x'])
 		.attr('cy', this.sky.polarPosition['y'] + this.position['y']);
 
-	this.runner += 1 / 10000 * 2 * Math.PI;
+	this.runner += 1 / this.stepGranularity * 2 * Math.PI;
 }
 
 
@@ -380,7 +387,7 @@ Sky.prototype.update = function() {
 	}
 
 	this.counter += 1;
-	if (this.counter > 19) {
+	if (this.counter > 9) {
 		this.counter = 0;
 	}
 }
