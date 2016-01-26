@@ -280,6 +280,111 @@ PoliceCar.prototype.update = function(g) {
 
 }
 
+/**
+ * Sky
+ **/
+function Star(sky) {
+	this.sky = sky;
+	this.circle = null;
+	this.radius = getRandomInt(0, 15) / 10;
+	this.polarDistance = getRandomInt(5, this.sky.engine.screenWidth);
+	this.runner = getRandomInt(0, 10000) / 10000 * 2 * Math.PI;
+	this.position = {
+		'x': Math.cos(this.runner) * this.polarDistance,
+		'y': Math.sin(this.runner) * this.polarDistance
+	};
+};
+
+Star.prototype.drawInit = function(g) {
+	this.circle = g.append('circle')
+		.attr('cx', this.sky.polarPosition['x'] + this.position['x'])
+		.attr('cy', this.sky.polarPosition['y'] + this.position['y'])
+		.attr('r', this.radius)
+		.attr('fill', '#CFDBFF');
+}
+
+Star.prototype.update = function() {
+	this.position['x'] = Math.cos(this.runner) * this.polarDistance;
+	this.position['y'] = Math.sin(this.runner) * this.polarDistance;
+
+	this.circle = this.circle
+		.attr('cx', this.sky.polarPosition['x'] + this.position['x'])
+		.attr('cy', this.sky.polarPosition['y'] + this.position['y']);
+
+	this.runner += 1 / 10000 * 2 * Math.PI;
+}
+
+
+/**
+ * Sky
+ **/
+function Sky(engine) {
+	this.engine = engine;
+	this.skyG = null;
+	this.polarPosition = {};
+	this.height = this.engine.screenHeight / 2;
+	this.stars = [];
+	this.counter = 0;
+};
+
+Sky.prototype.setHeight = function(height) {
+	this.height = height;
+}
+
+Sky.prototype.drawInit = function(g) {
+	var skyRect, i, newStar;
+
+	this.engine.svg
+		.insert('def', ":first-child")
+			.append('clipPath')
+				.attr('id', 'sky-clip')
+				.append('rect')
+					.attr('x', 0)
+					.attr('y', 0)
+					.attr('width', this.engine.screenWidth)
+					.attr('height', this.height);
+
+	this.skyG = g.append('g')
+		.attr('id', 'sky')
+		.attr('clip-path', 'url(#sky-clip)');
+
+	skyRect = this.skyG.append('rect')
+			.attr('x', 0)
+			.attr('y', 0)
+			.attr('width', this.engine.screenWidth)
+			.attr('height', this.height)
+			.attr('fill', '#000009');
+
+	this.polarPosition = {
+		'x': getRandomInt(20, this.engine.screenWidth - 20),
+		'y': getRandomInt(20, (this.height) - 20)
+	};
+
+	// polar star
+	this.skyG.append('circle').attr('cx', this.polarPosition['x']).attr('cy', this.polarPosition['y']).attr('r', 1).attr('fill', '#ffffff');
+
+	for (i = 0; i < 200; ++i) {
+		newStar = new Star(this);
+		newStar.drawInit(this.skyG);
+		this.stars.push(newStar);
+	}
+
+}
+
+Sky.prototype.update = function() {
+	var index;
+	if (this.counter === 0) {
+		for (index in this.stars) {
+			this.stars[index].update();
+		}
+	}
+
+	this.counter += 1;
+	if (this.counter > 19) {
+		this.counter = 0;
+	}
+}
+
 
 
 /**
@@ -319,6 +424,7 @@ function getRandomInt(min, max) {
 	return Math.floor(Math.random() * (max - min)) + min;
 }
 
+
 function DarkRoad() {
 	var g;
 	console.log('here');
@@ -333,19 +439,21 @@ function DarkRoad() {
 	this.screenHeight = d3.select('#dark-road').style('height').replace("px", "") - 10;
 
 	d3.select('#dark-road').style({'background-color':'black'});
-	this.g = d3.select('#dark-road').append('svg').append('g');
-	var sky = this.g.append('rect')
-			.attr('x', 0)
-			.attr('y', 0)
-			.attr('width', this.screenWidth)
-			.attr('height', this.screenHeight / 2)
-			.attr('fill', '#000009');
+	this.svg = d3.select('#dark-road')
+		.append('svg')
+			.attr('version','1.1')
+			.attr('xmlns', 'http://www.w3.org/2000/svg');
+	this.g = this.svg.append('g');
+
+	this.sky = new Sky(this);
 
 	// add lanes
 	var laneHeight = -80;
 
 	var horizon = worldToScreen(this.screenWidth, this.screenHeight, 0, laneHeight, 1500);
-	sky.attr('height', horizon[1]);
+
+	this.sky.setHeight(horizon[1]);
+	this.sky.drawInit(this.g);
 
 	var lane1 = new Lane(this, {'x': -28, 'y': laneHeight, 'z': -10}, {'x': -28, 'y': laneHeight, 'z': 1500});
 	lane1.drawInit(this.g);
@@ -418,6 +526,8 @@ DarkRoad.prototype.addRandomCar = function() {
 }
 
 DarkRoad.prototype.update = function() {
+	this.sky.update();
+
 	if (getRandomInt(0, 20) === 9) {
 		this.addRandomCar();
 	}
