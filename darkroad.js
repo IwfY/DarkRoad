@@ -342,7 +342,7 @@ Sky.prototype.drawInit = function(g) {
 	var skyRect, i, newStar;
 
 	this.engine.svg
-		.insert('def', ":first-child")
+		.insert('defs', ":first-child")
 			.append('clipPath')
 				.attr('id', 'sky-clip')
 				.append('rect')
@@ -434,7 +434,6 @@ function getRandomInt(min, max) {
 
 function DarkRoad() {
 	var g;
-	console.log('here');
 
 	this.counter = 0;
 	this.carCounter = 0;
@@ -451,6 +450,15 @@ function DarkRoad() {
 			.attr('version','1.1')
 			.attr('xmlns', 'http://www.w3.org/2000/svg');
 	this.g = this.svg.append('g');
+
+	// ground
+	this.g.append('rect')
+		.attr('x', '0')
+		.attr('y', this.screenHeight / 2)
+		.attr('width', this.screenWidth)
+		.attr('height', this.screenHeight / 2)
+		.attr('fill', '#000200')
+	;
 
 	this.sky = new Sky(this);
 
