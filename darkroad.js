@@ -281,6 +281,49 @@ PoliceCar.prototype.update = function(g) {
 }
 
 /**
+ * Building
+ **/
+function Building(engine) {
+	this.engine = engine;
+	this.buildingRect = null;
+};
+
+Building.prototype.drawInit = function(g, x, horizonY, width, height) {
+	this.buildingRect = g.append('rect')
+		.attr('x', x)
+		.attr('y', horizonY - height)
+		.attr('width', width)
+		.attr('height', height)
+		.attr('fill', 'rgb('+getRandomInt(0, 4)+','+getRandomInt(0, 4)+','+getRandomInt(0, 4)+')')
+	;
+
+}
+
+function City(engine) {
+	this.engine = engine;
+	this.cityG = null;
+	this.horizonY = null;
+	this.centerX = getRandomInt(0, this.engine.screenWidth);
+	this.buildings = [];
+}
+
+City.prototype.setHorizonY = function(horizonY) {
+	this.horizonY = horizonY;
+}
+
+City.prototype.drawInit = function(g) {
+	var i, building;
+	this.cityG = g.append('g');
+
+	for(i = 0; i < 7; ++i) {
+		building = new Building(this.engine);
+		building.drawInit(this.cityG, this.centerX + getRandomInt(-60, 60), this.horizonY, getRandomInt(10, 30), getRandomInt(10, 50));
+
+		this.buildings.push(building);
+	}
+}
+
+/**
  * Star
  **/
 function Star(sky) {
@@ -320,7 +363,6 @@ Star.prototype.update = function() {
 
 	this.runner += 1 / this.stepGranularity * 2 * Math.PI;
 }
-
 
 /**
  * Sky
@@ -469,6 +511,10 @@ function DarkRoad() {
 
 	this.sky.setHeight(horizon[1]);
 	this.sky.drawInit(this.g);
+
+	var city = new City(this);
+	city.setHorizonY(horizon[1]);
+	city.drawInit(this.g);
 
 	var lane1 = new Lane(this, {'x': -28, 'y': laneHeight, 'z': -10}, {'x': -28, 'y': laneHeight, 'z': 1500});
 	lane1.drawInit(this.g);
