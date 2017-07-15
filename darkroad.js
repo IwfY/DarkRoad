@@ -365,6 +365,41 @@ Star.prototype.update = function() {
 }
 
 /**
+ * Moon
+ **/
+function Moon(engine, sky) {
+	this.engine = engine;
+	this.sky = sky;
+	this.moonG = null;
+	this.runner = Math.PI * 3/2 + (getRandomInt(0, 10) / 50);
+	this.stepGranularity = 40000;
+	this.polarPosition = {'x' : null, 'y' : null};
+	this.polarDistance = {'x' : null, 'y' : null};
+};
+
+Moon.prototype.drawInit = function(skyG, skyRect) {
+	this.polarPosition['x'] = +skyRect.attr('width') / 2 + getRandomInt(-skyRect.attr('width') / 2, +skyRect.attr('width') / 2);
+	this.polarPosition['y'] = +skyRect.attr('height') + 80;
+	this.polarDistance['x'] = +skyRect.attr('width') * 3/5;
+	this.polarDistance['y'] = +skyRect.attr('height') * 7/8;
+
+	this.moonG = skyG.append('g').attr('transform', 'translate(100, 100)');
+	this.moonG.append('circle').attr('cx', 0).attr('cy', 0).attr('r', 15).attr({'fill': '#ffffff', 'opacity': 0.6});
+	this.moonG.append('circle').attr('cx', 0).attr('cy', 0).attr('r', 13).attr({'fill': '#ffffff'});
+	this.moonG.append('circle').attr('cx', 2).attr('cy', 4).attr('r', 4).attr({'fill': '#d8d8d8'});
+	this.moonG.append('circle').attr('cx', -5).attr('cy', 2).attr('r', 3).attr({'fill': '#f0f0f0'});
+	this.moonG.append('circle').attr('cx', -3).attr('cy', -6).attr('r', 3).attr({'fill': '#f0f0f0'});
+}
+
+Moon.prototype.update = function() {
+	var x = this.polarPosition['x'] + Math.cos(this.runner) * this.polarDistance['x'];
+	var y = this.polarPosition['y'] + Math.sin(this.runner) * this.polarDistance['y'];
+	this.moonG.attr('transform', 'translate(' + x + ',' + y + ')');
+
+	this.runner += 1 / this.stepGranularity * 2 * Math.PI;
+};
+
+/**
  * Sky
  **/
 function Sky(engine) {
@@ -373,6 +408,7 @@ function Sky(engine) {
 	this.polarPosition = {};
 	this.height = this.engine.screenHeight / 2;
 	this.stars = [];
+	this.moon = new Moon(this.engine, this)
 	this.counter = 0;
 };
 
@@ -418,6 +454,8 @@ Sky.prototype.drawInit = function(g) {
 		this.stars.push(newStar);
 	}
 
+	this.moon.drawInit(this.skyG, skyRect);
+
 }
 
 Sky.prototype.update = function() {
@@ -432,6 +470,8 @@ Sky.prototype.update = function() {
 	if (this.counter > 9) {
 		this.counter = 0;
 	}
+
+	this.moon.update();
 }
 
 
