@@ -286,6 +286,9 @@ PoliceCar.prototype.update = function(g) {
 function Building(engine) {
 	this.engine = engine;
 	this.buildingRect = null;
+	this.warningLight = null;
+	this.warningLightStart = getRandomInt(0, 240);
+	this.warningLightBlinkLength = getRandomInt(120, 240);
 };
 
 Building.prototype.drawInit = function(g, x, horizonY, width, height) {
@@ -297,7 +300,26 @@ Building.prototype.drawInit = function(g, x, horizonY, width, height) {
 		.attr('fill', 'rgb('+getRandomInt(0, 4)+','+getRandomInt(0, 4)+','+getRandomInt(0, 4)+')')
 	;
 
-}
+	if (height > 70) {
+		this.warningLight = g.append('circle')
+			.attr('cx', x + width/2)
+			.attr('cy', horizonY - height - 5)
+			.attr('r', 1.5)
+			.attr('fill', 'rgb('+getRandomInt(160, 210)+','+getRandomInt(0, 10)+','+getRandomInt(0, 10)+')')
+		;
+	}
+};
+
+Building.prototype.update = function() {
+	if (this.warningLight !== null) {
+		console.log((this.engine.getTickCounter() + this.warningLightStart) % (this.warningLightBlinkLength * 2));
+		if ((this.engine.getTickCounter() + this.warningLightStart) % (this.warningLightBlinkLength * 2) < this.warningLightBlinkLength) {
+			this.warningLight.attr('opacity', 0);
+		} else {
+			this.warningLight.attr('opacity', 1);
+		}
+	}
+};
 
 function City(engine) {
 	this.engine = engine;
@@ -309,17 +331,23 @@ function City(engine) {
 
 City.prototype.setHorizonY = function(horizonY) {
 	this.horizonY = horizonY;
-}
+};
 
 City.prototype.drawInit = function(g) {
 	var i, building;
 	this.cityG = g.append('g');
 
-	for(i = 0; i < 7; ++i) {
+	for(i = 0; i < 9; ++i) {
 		building = new Building(this.engine);
-		building.drawInit(this.cityG, this.centerX + getRandomInt(-60, 60), this.horizonY, getRandomInt(10, 30), getRandomInt(10, 50));
+		building.drawInit(this.cityG, this.centerX + getRandomInt(-80, 80), this.horizonY, getRandomInt(10, 25), getRandomInt(10, 90));
 
 		this.buildings.push(building);
+	}
+}
+
+City.prototype.update = function() {
+	for (index in this.buildings) {
+		this.buildings[index].update();
 	}
 }
 
@@ -408,7 +436,7 @@ function Sky(engine) {
 	this.polarPosition = {};
 	this.height = this.engine.screenHeight / 2;
 	this.stars = [];
-	this.moon = new Moon(this.engine, this)
+	this.moon = new Moon(this.engine, this);
 	this.counter = 0;
 };
 
@@ -460,16 +488,13 @@ Sky.prototype.drawInit = function(g) {
 
 Sky.prototype.update = function() {
 	var index;
-	if (this.counter === 0) {
+	if (this.counter % 10 === 0) {
 		for (index in this.stars) {
 			this.stars[index].update();
 		}
 	}
 
 	this.counter += 1;
-	if (this.counter > 9) {
-		this.counter = 0;
-	}
 
 	this.moon.update();
 }
@@ -522,9 +547,16 @@ function DarkRoad() {
 	this.cars = [];
 	this.lanes = [];
 	this.lastLane = 0;
+	this.cities = [];
+	this.cityCount = 2;
 
 	this.screenWidth = d3.select('#dark-road').style('width').replace("px", "") - 10;
 	this.screenHeight = d3.select('#dark-road').style('height').replace("px", "") - 10;
+
+	if (isNaN(this.screenWidth) || isNaN(this.screenHeight)) {
+		console.log('Error retrieving screen width and height.');
+		return;
+	}
 
 	d3.select('#dark-road').style({'background-color':'black'});
 	this.svg = d3.select('#dark-road')
@@ -552,9 +584,13 @@ function DarkRoad() {
 	this.sky.setHeight(horizon[1]);
 	this.sky.drawInit(this.g);
 
-	var city = new City(this);
-	city.setHorizonY(horizon[1]);
-	city.drawInit(this.g);
+	for (i = 0; i < this.cityCount; ++i) {
+		var city = new City(this);
+		city.setHorizonY(horizon[1]);
+		city.drawInit(this.g);
+		this.cities.push(city);
+	}
+
 
 	var lane1 = new Lane(this, {'x': -28, 'y': laneHeight, 'z': -10}, {'x': -28, 'y': laneHeight, 'z': 1500});
 	lane1.drawInit(this.g);
@@ -597,6 +633,10 @@ DarkRoad.prototype.run = function() {
 	this.interval = window.setInterval(this.update.bind(this), 50);
 }
 
+DarkRoad.prototype.getTickCounter = function() {
+	return this.counter;
+};
+
 DarkRoad.prototype.removeCar = function(car) {
 	var carIndex = this.cars.indexOf(car);
 	this.cars.splice(carIndex, 1);
@@ -637,12 +677,16 @@ DarkRoad.prototype.update = function() {
 		this.cars[j].update();
 	}
 
-	++this.counter;
+	for (index in this.cities) {
+		this.cities[index].update();
+	}
 
 	//~ if (this.counter > 500) {
 		//~ console.log('done');
 		//~ window.clearInterval(this.interval);
 	//~ }
+
+	++this.counter;
 
 	return false;
 }
