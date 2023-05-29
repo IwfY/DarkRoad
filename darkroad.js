@@ -293,6 +293,14 @@ function Building(engine) {
 };
 
 Building.prototype.drawInit = function (g, x, horizonY, width, height) {
+    var orangeSideBrightness = getRandomInt(2, 9) / 10;
+    this.buildingRect = g.append('rect')
+        .attr('x', x + 2)
+        .attr('y', horizonY - height + 2)
+        .attr('width', width)
+        .attr('height', height - 2)
+        .attr('fill', 'rgb(' + orangeSideBrightness * (160 + getRandomInt(-10, 10)) + ',' + orangeSideBrightness * (80 + getRandomInt(-10, 10)) + ',' + orangeSideBrightness * (50 + getRandomInt(-10, 10)) + ')')
+        ;
     this.buildingRect = g.append('rect')
         .attr('x', x)
         .attr('y', horizonY - height)
@@ -458,6 +466,27 @@ Sky.prototype.drawInit = function (g) {
         .attr('width', this.engine.screenWidth)
         .attr('height', this.height);
 
+
+    var skyGradient = this.engine.svg
+        .insert('defs', ":first-child")
+        .append('linearGradient')
+        .attr('id', 'sky-gradient')
+        .attr('x1', 0.87)
+        .attr('x2', 1.05)
+        .attr('y1', 0.83)
+        .attr('y2', 1.02)
+        ;
+    skyGradient // blue
+        .append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', '#06051f')
+        ;
+    skyGradient // red
+        .append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', '#320714')
+        ;
+
     this.skyG = g.append('g')
         .attr('id', 'sky')
         .attr('clip-path', 'url(#sky-clip)');
@@ -467,7 +496,13 @@ Sky.prototype.drawInit = function (g) {
         .attr('y', 0)
         .attr('width', this.engine.screenWidth)
         .attr('height', this.height)
-        .attr('fill', '#000009');
+        ;
+
+    if (getRandomInt(0, 2) === 1) {
+        skyRect.attr('fill', 'url(#sky-gradient)');
+    } else {
+        skyRect.attr('fill', '#06051f');
+    }
 
     this.polarPosition = {
         'x': getRandomInt(20, this.engine.screenWidth - 20),
