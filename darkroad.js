@@ -66,13 +66,14 @@ Lane.prototype.getNormalizedVector = function () {
  **/
 function Sign(engine) {
     this.engine = engine;
-    this.signWorldDepth = -130;
+    this.signWorldDepth = getRandomInt(-300, -100);
     this.signWorldCenter = -42;
+    this.signWidth = 10;
 };
 
 Sign.prototype.drawInit = function (g) {
-    var coord1 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter - 5, this.engine.laneHeight + 32, this.signWorldDepth); // top left
-    var coord2 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter + 5, this.engine.laneHeight + 7, this.signWorldDepth); // bottom right
+    var coord1 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter - this.signWidth / 2, this.engine.laneHeight + 34, this.signWorldDepth); // top left
+    var coord2 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter + this.signWidth / 2, this.engine.laneHeight + 7, this.signWorldDepth); // bottom right
 
     var coord3 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter - 4.4, this.engine.laneHeight + 7, this.signWorldDepth); // foot top left
     var coord4 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter - 4.2, this.engine.laneHeight + 0, this.signWorldDepth); // foot bottom right
@@ -80,14 +81,41 @@ Sign.prototype.drawInit = function (g) {
     var coordRightFootTL = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter + 4.2, this.engine.laneHeight + 7, this.signWorldDepth); // foot top left
     var coordRightFootBR = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter + 4.4, this.engine.laneHeight + 0, this.signWorldDepth); // foot bottom right
 
+    var coordLightsTL = worldToScreen(this.engine.screenWidth, this.engine.screenHeight,
+        this.signWorldCenter - this.signWidth / 2 + 0.3, this.engine.laneHeight + 34.5, this.signWorldDepth + 0.5);
+    var coordLightsBR = worldToScreen(this.engine.screenWidth, this.engine.screenHeight,
+        this.signWorldCenter + this.signWidth / 2 - 0.3, this.engine.laneHeight + 34, this.signWorldDepth + 0.5);
+    var lightWidth = 0.8 * (coordLightsBR[0] - coordLightsTL[0]) / 3.0;
+    var lightGap = ((coordLightsBR[0] - coordLightsTL[0]) - lightWidth * 3.0) / 2.0;
+
+    var signGradient = this.engine.svg
+        .insert('defs', ":first-child")
+        .append('linearGradient')
+        .attr('id', 'sign-gradient')
+        .attr('x1', 0)
+        .attr('x2', 0)
+        .attr('y1', 0.1)
+        .attr('y2', 1)
+        ;
+    signGradient // blue
+        .append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', '#09093b')
+        ;
+    signGradient // black
+        .append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', '#000000')
+        ;
+
     this.signRect = g.append('rect')
         .attr('id', 'sign')
         .attr('x', coord1[0])
         .attr('y', coord1[1])
         .attr('width', coord2[0] - coord1[0])
         .attr('height', coord2[1] - coord1[1])
-        .attr('fill', '#09093b')
-        ;
+        .attr('fill', 'url(#sign-gradient)');
+    ;
     this.footLeft = g.append('rect')
         .attr('id', 'sign-foot-left')
         .attr('x', coord3[0])
@@ -103,6 +131,31 @@ Sign.prototype.drawInit = function (g) {
         .attr('width', coordRightFootBR[0] - coordRightFootTL[0])
         .attr('height', coordRightFootBR[1] - coordRightFootTL[1])
         .attr('fill', '#0e0e16')
+        ;
+
+    this.light1 = g.append('rect')
+        .attr('id', 'sign-light1')
+        .attr('x', coordLightsTL[0])
+        .attr('y', coordLightsTL[1])
+        .attr('width', lightWidth)
+        .attr('height', coordLightsBR[1] - coordLightsTL[1])
+        .attr('fill', '#bfbfbf')
+        ;
+    this.light2 = g.append('rect')
+        .attr('id', 'sign-light2')
+        .attr('x', coordLightsTL[0] + lightWidth + lightGap)
+        .attr('y', coordLightsTL[1])
+        .attr('width', lightWidth)
+        .attr('height', coordLightsBR[1] - coordLightsTL[1])
+        .attr('fill', '#bfbfbf')
+        ;
+    this.light3 = g.append('rect')
+        .attr('id', 'sign-light3')
+        .attr('x', coordLightsTL[0] + (lightWidth + lightGap) * 2)
+        .attr('y', coordLightsTL[1])
+        .attr('width', lightWidth)
+        .attr('height', coordLightsBR[1] - coordLightsTL[1])
+        .attr('fill', '#bfbfbf')
         ;
 }
 
