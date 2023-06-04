@@ -66,14 +66,15 @@ Lane.prototype.getNormalizedVector = function () {
  **/
 function Sign(engine) {
     this.engine = engine;
-    this.signWorldDepth = getRandomInt(-300, -100);
+    this.signWorldDepth = getRandomInt(-300, -110);
     this.signWorldCenter = -42;
     this.signWidth = 10;
 };
 
 Sign.prototype.drawInit = function (g) {
-    var coord1 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter - this.signWidth / 2, this.engine.laneHeight + 34, this.signWorldDepth); // top left
+    var coord1 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter - this.signWidth / 2, this.engine.laneHeight + 35, this.signWorldDepth); // top left
     var coord2 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter + this.signWidth / 2, this.engine.laneHeight + 7, this.signWorldDepth); // bottom right
+    var signPixelHeight = coord2[1] - coord1[1];
 
     var coord3 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter - 4.4, this.engine.laneHeight + 7, this.signWorldDepth); // foot top left
     var coord4 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter - 4.2, this.engine.laneHeight + 0, this.signWorldDepth); // foot bottom right
@@ -81,10 +82,17 @@ Sign.prototype.drawInit = function (g) {
     var coordRightFootTL = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter + 4.2, this.engine.laneHeight + 7, this.signWorldDepth); // foot top left
     var coordRightFootBR = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter + 4.4, this.engine.laneHeight + 0, this.signWorldDepth); // foot bottom right
 
+    var coordArrowTop = worldToScreen(this.engine.screenWidth, this.engine.screenHeight,
+        this.signWorldCenter + 0.7 * this.signWidth / 2, this.engine.laneHeight + 32, this.signWorldDepth);
+    var coordText1 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight,
+        this.signWorldCenter + 0.45 * this.signWidth / 2, this.engine.laneHeight + 30, this.signWorldDepth); // right top
+    var coordText2 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight,
+        this.signWorldCenter + 0.3 * this.signWidth / 2, this.engine.laneHeight + 19, this.signWorldDepth); // right top
+
     var coordLightsTL = worldToScreen(this.engine.screenWidth, this.engine.screenHeight,
-        this.signWorldCenter - this.signWidth / 2 + 0.3, this.engine.laneHeight + 34.5, this.signWorldDepth + 0.5);
+        this.signWorldCenter - this.signWidth / 2 + 0.3, this.engine.laneHeight + 35.5, this.signWorldDepth + 0.5);
     var coordLightsBR = worldToScreen(this.engine.screenWidth, this.engine.screenHeight,
-        this.signWorldCenter + this.signWidth / 2 - 0.3, this.engine.laneHeight + 34, this.signWorldDepth + 0.5);
+        this.signWorldCenter + this.signWidth / 2 - 0.3, this.engine.laneHeight + 35, this.signWorldDepth + 0.5);
     var lightWidth = 0.8 * (coordLightsBR[0] - coordLightsTL[0]) / 3.0;
     var lightGap = ((coordLightsBR[0] - coordLightsTL[0]) - lightWidth * 3.0) / 2.0;
 
@@ -97,12 +105,35 @@ Sign.prototype.drawInit = function (g) {
         .attr('y1', 0.1)
         .attr('y2', 1)
         ;
+
     signGradient // blue
         .append('stop')
         .attr('offset', '0%')
         .attr('stop-color', '#09093b')
         ;
     signGradient // black
+        .append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', '#000000')
+        ;
+
+
+    var signArrowGradient = this.engine.svg
+        .insert('defs', ":first-child")
+        .append('linearGradient')
+        .attr('id', 'sign-arrow-gradient')
+        .attr('x1', 0)
+        .attr('x2', 0)
+        .attr('y1', 0.1)
+        .attr('y2', 1)
+        ;
+
+    signArrowGradient // white
+        .append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', '#cccccc')
+        ;
+    signArrowGradient // black
         .append('stop')
         .attr('offset', '100%')
         .attr('stop-color', '#000000')
@@ -116,6 +147,31 @@ Sign.prototype.drawInit = function (g) {
         .attr('height', coord2[1] - coord1[1])
         .attr('fill', 'url(#sign-gradient)');
     ;
+
+    var arrowScale = signPixelHeight / 120;
+    this.signArrowPath = g.append('path')
+        .attr('id', 'sign-arrow')
+        .attr('transform', 'translate(' + coordArrowTop[0] + ' ' + coordArrowTop[1] + ') scale(' + arrowScale + ') ')
+        .attr('d', 'M 0 0 l 4 4 v 96 h -8 v -16 l -14 -14 v -4 h 4 l 10 10 v -72 z')
+        .attr('fill', 'url(#sign-arrow-gradient)');
+    ;
+
+    this.textTop = g.append('text')
+        .attr('id', 'sign-text-top')
+        .attr('x', coordText1[0])
+        .attr('y', coordText1[1])
+        .attr('style', 'fill:#bbbbbb;font-family:"Open Sans";direction:rtl;font-size:' + signPixelHeight / 10)
+        .text(this.engine.getRandomCityName())
+        ;
+
+    this.textBottom = g.append('text')
+        .attr('id', 'sign-text-top')
+        .attr('x', coordText2[0])
+        .attr('y', coordText2[1])
+        .attr('style', 'fill:#555555;font-family:"Open Sans";direction:rtl;font-size:' + signPixelHeight / 10)
+        .text(this.engine.getRandomCityName())
+        ;
+
     this.footLeft = g.append('rect')
         .attr('id', 'sign-foot-left')
         .attr('x', coord3[0])
@@ -683,7 +739,7 @@ function DarkRoad() {
     this.lanes = [];
     this.lastLane = 0;
     this.cities = [];
-    this.cityCount = 2;
+    this.cityCount = getRandomInt(2, 6);
 
     this.screenWidth = d3.select('#dark-road').style('width').replace("px", "") - 10;
     this.screenHeight = d3.select('#dark-road').style('height').replace("px", "") - 10;
@@ -826,6 +882,11 @@ DarkRoad.prototype.update = function () {
     ++this.counter;
 
     return false;
+}
+DarkRoad.prototype.getRandomCityName = function () {
+    var cities = ['Aachen', 'Bern', 'Cairo', 'القاهرة', 'Detroit', 'Essen', 'Frankfurt', 'Görlitz', 'Halle',
+        'Insbruck', 'Jena', 'Konstanz', 'Liverpool', 'Madrid', 'Napoli', 'Oslo', 'Praha'];
+    return cities[getRandomInt(0, cities.length + 1)];
 }
 
 function init() {
