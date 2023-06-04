@@ -62,6 +62,52 @@ Lane.prototype.getNormalizedVector = function () {
 
 
 /**
+ * Sign
+ **/
+function Sign(engine) {
+    this.engine = engine;
+    this.signWorldDepth = -130;
+    this.signWorldCenter = -42;
+};
+
+Sign.prototype.drawInit = function (g) {
+    var coord1 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter - 5, this.engine.laneHeight + 32, this.signWorldDepth); // top left
+    var coord2 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter + 5, this.engine.laneHeight + 7, this.signWorldDepth); // bottom right
+
+    var coord3 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter - 4.4, this.engine.laneHeight + 7, this.signWorldDepth); // foot top left
+    var coord4 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter - 4.2, this.engine.laneHeight + 0, this.signWorldDepth); // foot bottom right
+
+    var coordRightFootTL = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter + 4.2, this.engine.laneHeight + 7, this.signWorldDepth); // foot top left
+    var coordRightFootBR = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.signWorldCenter + 4.4, this.engine.laneHeight + 0, this.signWorldDepth); // foot bottom right
+
+    this.signRect = g.append('rect')
+        .attr('id', 'sign')
+        .attr('x', coord1[0])
+        .attr('y', coord1[1])
+        .attr('width', coord2[0] - coord1[0])
+        .attr('height', coord2[1] - coord1[1])
+        .attr('fill', '#09093b')
+        ;
+    this.footLeft = g.append('rect')
+        .attr('id', 'sign-foot-left')
+        .attr('x', coord3[0])
+        .attr('y', coord3[1])
+        .attr('width', coord4[0] - coord3[0])
+        .attr('height', coord4[1] - coord3[1])
+        .attr('fill', '#0e0e16')
+        ;
+    this.footRight = g.append('rect')
+        .attr('id', 'sign-foot-right')
+        .attr('x', coordRightFootTL[0])
+        .attr('y', coordRightFootTL[1])
+        .attr('width', coordRightFootBR[0] - coordRightFootTL[0])
+        .attr('height', coordRightFootBR[1] - coordRightFootTL[1])
+        .attr('fill', '#0e0e16')
+        ;
+}
+
+
+/**
  * Light
  **/
 function Light(car, name, relativePosition, color) {
@@ -540,7 +586,7 @@ Sky.prototype.update = function () {
 /**
  * transform world coordinates to screen coordinates
  *
- * considers eye to be at (0, 0, -1)
+ * considers eye to be at (0, 0, 1)
  *
  **/
 function worldToScreen(screenWidth, screenHeight, x, y, z) {
@@ -613,9 +659,9 @@ function DarkRoad() {
     this.sky = new Sky(this);
 
     // add lanes
-    var laneHeight = -80;
+    this.laneHeight = -80;
 
-    var horizon = worldToScreen(this.screenWidth, this.screenHeight, 0, laneHeight, 1500);
+    var horizon = worldToScreen(this.screenWidth, this.screenHeight, 0, this.laneHeight, 1500);
 
     this.sky.setHeight(horizon[1]);
     this.sky.drawInit(this.g);
@@ -627,39 +673,41 @@ function DarkRoad() {
         this.cities.push(city);
     }
 
-
-    var lane1 = new Lane(this, { 'x': -28, 'y': laneHeight, 'z': -10 }, { 'x': -28, 'y': laneHeight, 'z': 1500 });
+    var lane1 = new Lane(this, { 'x': -28, 'y': this.laneHeight, 'z': -10 }, { 'x': -28, 'y': this.laneHeight, 'z': 1500 });
     lane1.drawInit(this.g);
     this.lanes.push(lane1);
 
-    var lane2 = new Lane(this, { 'x': -12, 'y': laneHeight, 'z': -10 }, { 'x': -12, 'y': laneHeight, 'z': 1500 });
+    var lane2 = new Lane(this, { 'x': -12, 'y': this.laneHeight, 'z': -10 }, { 'x': -12, 'y': this.laneHeight, 'z': 1500 });
     lane2.speed = lane2.speed + 2;
     lane2.drawInit(this.g);
     this.lanes.push(lane2);
 
-    var lane3 = new Lane(this, { 'x': 14, 'y': laneHeight, 'z': 1500 }, { 'x': 14, 'y': laneHeight, 'z': -10 });
+    var lane3 = new Lane(this, { 'x': 14, 'y': this.laneHeight, 'z': 1500 }, { 'x': 14, 'y': this.laneHeight, 'z': -10 });
     lane3.speed = lane3.speed + 2;
     lane3.drawInit(this.g);
     this.lanes.push(lane3);
 
-    var lane4 = new Lane(this, { 'x': 30, 'y': laneHeight, 'z': 1500 }, { 'x': 30, 'y': laneHeight, 'z': -10 });
+    var lane4 = new Lane(this, { 'x': 30, 'y': this.laneHeight, 'z': 1500 }, { 'x': 30, 'y': this.laneHeight, 'z': -10 });
     lane4.drawInit(this.g);
     this.lanes.push(lane4);
 
-    var lane5 = new Lane(this, { 'x': 30, 'y': laneHeight, 'z': 1300 }, { 'x': 480, 'y': laneHeight, 'z': 100 });
+    var lane5 = new Lane(this, { 'x': 30, 'y': this.laneHeight, 'z': 1300 }, { 'x': 480, 'y': this.laneHeight, 'z': 100 });
     lane5.speed = lane5.speed - 1.5;
     lane5.drawInit(this.g);
     this.lanes.push(lane5);
 
-    var lane6 = new Lane(this, { 'x': -220, 'y': laneHeight, 'z': -10 }, { 'x': -520, 'y': laneHeight, 'z': 1500 });
+    var lane6 = new Lane(this, { 'x': -220, 'y': this.laneHeight, 'z': -10 }, { 'x': -520, 'y': this.laneHeight, 'z': 1500 });
     lane6.speed = lane6.speed - 1.5;
     lane6.drawInit(this.g);
     this.lanes.push(lane6);
 
-    var lane7 = new Lane(this, { 'x': -500, 'y': laneHeight, 'z': 1500 }, { 'x': -200, 'y': laneHeight, 'z': -10 });
+    var lane7 = new Lane(this, { 'x': -500, 'y': this.laneHeight, 'z': 1500 }, { 'x': -200, 'y': this.laneHeight, 'z': -10 });
     lane7.speed = lane7.speed - 1.5;
     lane7.drawInit(this.g);
     this.lanes.push(lane7);
+
+    var sign = new Sign(this);
+    sign.drawInit(this.g);
 
     this.run();
 
