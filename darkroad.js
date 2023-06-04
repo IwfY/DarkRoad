@@ -66,7 +66,7 @@ Lane.prototype.getNormalizedVector = function () {
  **/
 function Sign(engine) {
     this.engine = engine;
-    this.signWorldDepth = getRandomInt(-300, -110);
+    this.signWorldDepth = getRandomInt(-250, -110);
     this.signWorldCenter = -42;
     this.signWidth = 10;
 };
@@ -160,7 +160,7 @@ Sign.prototype.drawInit = function (g) {
         .attr('id', 'sign-text-top')
         .attr('x', coordText1[0])
         .attr('y', coordText1[1])
-        .attr('style', 'fill:#bbbbbb;font-family:"Open Sans";direction:rtl;font-size:' + signPixelHeight / 10)
+        .attr('style', 'fill:#bbbbbb;font-family:"Open Sans";direction:rtl;font-size:' + signPixelHeight / 11)
         .text(this.engine.getRandomCityName())
         ;
 
@@ -168,7 +168,7 @@ Sign.prototype.drawInit = function (g) {
         .attr('id', 'sign-text-top')
         .attr('x', coordText2[0])
         .attr('y', coordText2[1])
-        .attr('style', 'fill:#555555;font-family:"Open Sans";direction:rtl;font-size:' + signPixelHeight / 10)
+        .attr('style', 'fill:#555555;font-family:"Open Sans";direction:rtl;font-size:' + signPixelHeight / 11)
         .text(this.engine.getRandomCityName())
         ;
 
@@ -884,11 +884,12 @@ DarkRoad.prototype.update = function () {
     return false;
 }
 DarkRoad.prototype.getRandomCityName = function () {
-    var cities = ['Aachen', 'Bern', 'Cairo', 'القاهرة', 'Detroit', 'Essen', 'Frankfurt', 'Görlitz', 'Halle',
-        'Insbruck', 'Jena', 'Konstanz', 'Liverpool', 'Madrid', 'Napoli', 'Oslo', 'Praha'];
-    return cities[getRandomInt(0, cities.length + 1)];
+    var cities = ['Aachen', 'Accra', 'Aşgabat', 'عمّان', 'Bern', 'Berlin', 'Cairo', 'القاهرة', 'ചവറ', 'Detroit', 'Dresden', 'دبي', 'Essen', 'Frankfurt', 'Görlitz', 'Halle', '浜松市',
+        'Innsbruck', 'İzmir', 'Jena', 'Jerusalem', 'Kakata', 'Konstanz', 'Lascano', 'Liverpool', 'Madrid', 'Napoli', 'Находка', 'Oslo', 'Praha', 'Πάτρα', 'Quellón', 'Quito', 'Roma',
+        'Скопје', 'ວຽງຈັນ', '漳州市'];
+    return cities[getRandomInt(0, cities.length)];
 }
 
 function init() {
-    var darkRoad = new DarkRoad();
+    window.darkRoad = new DarkRoad();
 }
