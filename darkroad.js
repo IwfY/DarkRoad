@@ -128,7 +128,7 @@ Sign.prototype.drawInit = function (g) {
         .attr('x2', 0)
         .attr('y1', 0.1)
         .attr('y2', 1)
-        ;
+    ;
 
     signArrowGradient // white
         .append('stop')
@@ -472,14 +472,35 @@ function Building(engine) {
 };
 
 Building.prototype.drawInit = function (g, x, horizonY, width, height) {
-    var orangeSideBrightness = getRandomInt(2, 9) / 10;
+    var orangeSideBrightness = getRandomInt(2, 8) / 10;
+
+    var buildingSideGradient = this.engine.svg
+        .insert('defs', ":first-child")
+        .append('linearGradient')
+        .attr('id', 'building-side-gradient')
+        .attr('x1', 0)
+        .attr('x2', 0)
+        .attr('y1', 0)
+        .attr('y2', 0.95)
+    ;
+    buildingSideGradient // white
+        .append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', 'rgb(' + orangeSideBrightness * (160 + getRandomInt(-10, 10)) + ',' + orangeSideBrightness * (80 + getRandomInt(-10, 10)) + ',' + orangeSideBrightness * (50 + getRandomInt(-10, 10)) + ')')
+    ;
+    buildingSideGradient // black
+        .append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', '#000')
+    ;
+
     this.buildingRect = g.append('rect')
         .attr('x', x + 2)
         .attr('y', horizonY - height + 2)
         .attr('width', width)
         .attr('height', height - 2)
-        .attr('fill', 'rgb(' + orangeSideBrightness * (160 + getRandomInt(-10, 10)) + ',' + orangeSideBrightness * (80 + getRandomInt(-10, 10)) + ',' + orangeSideBrightness * (50 + getRandomInt(-10, 10)) + ')')
-        ;
+        .attr('fill', 'url(#building-side-gradient)')
+    ;
     this.buildingRect = g.append('rect')
         .attr('x', x)
         .attr('y', horizonY - height)
