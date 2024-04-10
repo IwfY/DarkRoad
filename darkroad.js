@@ -609,7 +609,7 @@ function Moon(engine, sky) {
     this.sky = sky;
     this.moonG = null;
     this.runner = Math.PI * 3 / 2 + (getRandomInt(0, 10) / 50);
-    this.stepGranularity = 40000;
+    this.stepGranularity = 30000;
     this.polarPosition = { 'x': null, 'y': null };
     this.polarDistance = { 'x': null, 'y': null };
 };
@@ -621,9 +621,9 @@ Moon.prototype.drawInit = function (skyG, skyRect) {
     this.polarDistance['y'] = +skyRect.attr('height') * 7 / 8;
 
     this.moonG = skyG.append('g').attr('transform', 'translate(100, 100)');
-    this.moonG.append('circle').attr('cx', 0).attr('cy', 0).attr('r', 15).attr({ 'fill': '#ffffff', 'opacity': 0.6 });
-    this.moonG.append('circle').attr('cx', 0).attr('cy', 0).attr('r', 13).attr({ 'fill': '#ffffff' });
-    this.moonG.append('circle').attr('cx', 2).attr('cy', 4).attr('r', 4).attr({ 'fill': '#d8d8d8' });
+    this.moonG.append('circle').attr('cx', 0).attr('cy', 0).attr('r', 20).attr({ 'fill': '#faffd3', 'opacity': 0.6 });
+    this.moonG.append('circle').attr('cx', 0).attr('cy', 0).attr('r', 18).attr({ 'fill': '#faffd3' });
+    this.moonG.append('circle').attr('cx', 2).attr('cy', 4).attr('r', 4).attr({ 'fill': '#e1e6be' });
     this.moonG.append('circle').attr('cx', -5).attr('cy', 2).attr('r', 3).attr({ 'fill': '#f0f0f0' });
     this.moonG.append('circle').attr('cx', -3).attr('cy', -6).attr('r', 3).attr({ 'fill': '#f0f0f0' });
 }
@@ -784,7 +784,7 @@ function DarkRoad() {
     this.lanes = [];
     this.lastLane = 0;
     this.cities = [];
-    this.cityCount = getRandomInt(2, 6);
+    this.cityCount = getRandomInt(3, 7);
 
     this.screenWidth = d3.select('#dark-road').style('width').replace("px", "") - 10;
     this.screenHeight = d3.select('#dark-road').style('height').replace("px", "") - 10;
