@@ -69,6 +69,7 @@ function Sign(engine) {
     this.signWorldDepth = getRandomInt(-250, -110);
     this.signWorldCenter = -42;
     this.signWidth = 10;
+    this.lights = [];
 };
 
 Sign.prototype.drawInit = function (g) {
@@ -89,12 +90,13 @@ Sign.prototype.drawInit = function (g) {
     var coordText2 = worldToScreen(this.engine.screenWidth, this.engine.screenHeight,
         this.signWorldCenter + 0.3 * this.signWidth / 2, this.engine.laneHeight + 19, this.signWorldDepth); // right top
 
+    var numberOfLights = 2 + getRandomInt(0, 2);
     var coordLightsTL = worldToScreen(this.engine.screenWidth, this.engine.screenHeight,
         this.signWorldCenter - this.signWidth / 2 + 0.3, this.engine.laneHeight + 35.5, this.signWorldDepth + 0.5);
     var coordLightsBR = worldToScreen(this.engine.screenWidth, this.engine.screenHeight,
         this.signWorldCenter + this.signWidth / 2 - 0.3, this.engine.laneHeight + 35, this.signWorldDepth + 0.5);
-    var lightWidth = 0.8 * (coordLightsBR[0] - coordLightsTL[0]) / 3.0;
-    var lightGap = ((coordLightsBR[0] - coordLightsTL[0]) - lightWidth * 3.0) / 2.0;
+    var lightWidth = 0.92 * (coordLightsBR[0] - coordLightsTL[0]) / numberOfLights;
+    var lightGap = ((coordLightsBR[0] - coordLightsTL[0]) - lightWidth * numberOfLights) / (numberOfLights - 1);
 
     var signGradient = this.engine.svg
         .insert('defs', ":first-child")
@@ -131,7 +133,7 @@ Sign.prototype.drawInit = function (g) {
     signArrowGradient // white
         .append('stop')
         .attr('offset', '0%')
-        .attr('stop-color', '#cccccc')
+        .attr('stop-color', '#bbbbbb')
         ;
     signArrowGradient // black
         .append('stop')
@@ -160,7 +162,7 @@ Sign.prototype.drawInit = function (g) {
         .attr('id', 'sign-text-top')
         .attr('x', coordText1[0])
         .attr('y', coordText1[1])
-        .attr('style', 'fill:#bbbbbb;font-family:"Open Sans";direction:rtl;font-size:' + signPixelHeight / 11)
+        .attr('style', 'fill:#aaaaaa;font-family:"Open Sans";direction:rtl;font-size:' + signPixelHeight / 11)
         .text(this.engine.getRandomCityName())
         ;
 
@@ -189,30 +191,17 @@ Sign.prototype.drawInit = function (g) {
         .attr('fill', '#0e0e16')
         ;
 
-    this.light1 = g.append('rect')
-        .attr('id', 'sign-light1')
-        .attr('x', coordLightsTL[0])
-        .attr('y', coordLightsTL[1])
-        .attr('width', lightWidth)
-        .attr('height', coordLightsBR[1] - coordLightsTL[1])
-        .attr('fill', '#bfbfbf')
+    for (var i = 0; i < numberOfLights; ++i) {
+        var light = g.append('rect')
+            .attr('id', 'sign-light-' + i.toString())
+            .attr('x', coordLightsTL[0] + (lightWidth + lightGap) * i)
+            .attr('y', coordLightsTL[1])
+            .attr('width', lightWidth)
+            .attr('height', coordLightsBR[1] - coordLightsTL[1])
+            .attr('fill', '#bfbfbf')
         ;
-    this.light2 = g.append('rect')
-        .attr('id', 'sign-light2')
-        .attr('x', coordLightsTL[0] + lightWidth + lightGap)
-        .attr('y', coordLightsTL[1])
-        .attr('width', lightWidth)
-        .attr('height', coordLightsBR[1] - coordLightsTL[1])
-        .attr('fill', '#bfbfbf')
-        ;
-    this.light3 = g.append('rect')
-        .attr('id', 'sign-light3')
-        .attr('x', coordLightsTL[0] + (lightWidth + lightGap) * 2)
-        .attr('y', coordLightsTL[1])
-        .attr('width', lightWidth)
-        .attr('height', coordLightsBR[1] - coordLightsTL[1])
-        .attr('fill', '#bfbfbf')
-        ;
+        this.lights.push(light);
+    }
 }
 
 
@@ -885,8 +874,9 @@ DarkRoad.prototype.update = function () {
 }
 DarkRoad.prototype.getRandomCityName = function () {
     var cities = ['Aachen', 'Accra', 'Aşgabat', 'عمّان', 'Bern', 'Berlin', 'Cairo', 'القاهرة', 'ചവറ', 'Detroit', 'Dresden', 'دبي', 'Essen', 'Frankfurt', 'Görlitz', 'Halle', '浜松市',
-        'Innsbruck', 'İzmir', 'Jena', 'Jerusalem', 'Kakata', 'Konstanz', 'Lascano', 'Liverpool', 'Madrid', 'Napoli', 'Находка', 'Oslo', 'Praha', 'Πάτρα', 'Quellón', 'Quito', 'Roma',
-        'Скопје', 'ວຽງຈັນ', '漳州市'];
+        'Innsbruck', 'İzmir', 'Jena', 'Jerusalem', 'Kakata', 'Kiev', 'Konstanz', 'Lascano', 'Liverpool', 'Madrid', 'Napoli', 'Находка', 'Oslo', 'Praha', 'Πάτρα', 'Quellón',
+        'Quito', 'Roma',
+        'Скопје', 'Västerås', 'ວຽງຈັນ', '漳州市'];
     return cities[getRandomInt(0, cities.length)];
 }
 
