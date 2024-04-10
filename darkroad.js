@@ -375,20 +375,23 @@ PoliceCar.prototype.drawInit = function (g) {
 
     this.leftLightElement = g.append('circle').attr('id', 'car' + this.id + '_l').attr('cx', -1).attr('cy', -1).attr('r', 10).attr('fill', color);
     this.rightLightElement = g.append('circle').attr('id', 'car' + this.id + '_r').attr('cx', -1).attr('cy', -1).attr('r', 10).attr('fill', color);
-    this.flashLightElement = g.append('circle').attr('id', 'car' + this.id + '_flash').attr('cx', -1).attr('cy', -1).attr('r', 10).attr('fill', 'blue');
+    this.flashLeftLightElement = g.append('circle').attr('id', 'car' + this.id + '_flash_l').attr('cx', -1).attr('cy', -1).attr('r', 10).attr('fill', '#0000d7');
+    this.flashRightLightElement = g.append('circle').attr('id', 'car' + this.id + '_flash_r').attr('cx', -1).attr('cy', -1).attr('r', 10).attr('fill', '#0000d7');
 }
 
 PoliceCar.prototype.remove = function (g) {
     this.leftLightElement.remove();
     this.rightLightElement.remove();
-    this.flashLightElement.remove();
+    this.flashLeftLightElement.remove();
+    this.flashRightLightElement.remove();
 }
 
 PoliceCar.prototype.update = function (g) {
     var side = this.flashCount >= 0 ? 1 : -1;
     var leftScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x - 3, this.coordinates.y, this.coordinates.z);
     var rightScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x + 3, this.coordinates.y, this.coordinates.z);
-    var flashScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x + (3 * side), this.coordinates.y + 3, this.coordinates.z);
+    var flashLeftScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x + 2.6, this.coordinates.y + 5, this.coordinates.z + 1);
+    var flashRightScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x - 2.6, this.coordinates.y + 5, this.coordinates.z + 1);
     var r = (rightScreenCoords[0] - leftScreenCoords[0]) / 10;
 
     // lighting up
@@ -407,10 +410,19 @@ PoliceCar.prototype.update = function (g) {
         }
     }
 
+    if (side === 1) {
+        this.flashLeftLightElement.attr('fill', '#0000d7');
+        this.flashRightLightElement.attr('fill', '#00002a');
+    } else {
+        this.flashLeftLightElement.attr('fill', '#00002a');
+        this.flashRightLightElement.attr('fill', '#0000d7');
+    }
+
     // move elements
     this.leftLightElement.attr('cx', leftScreenCoords[0]).attr('cy', leftScreenCoords[1]).attr('r', r);
     this.rightLightElement.attr('cx', rightScreenCoords[0]).attr('cy', rightScreenCoords[1]).attr('r', r);
-    this.flashLightElement.attr('cx', flashScreenCoords[0]).attr('cy', flashScreenCoords[1]).attr('r', r * 2);
+    this.flashLeftLightElement.attr('cx', flashLeftScreenCoords[0]).attr('cy', flashLeftScreenCoords[1]).attr('r', r * 1.8);
+    this.flashRightLightElement.attr('cx', flashRightScreenCoords[0]).attr('cy', flashRightScreenCoords[1]).attr('r', r * 1.8);
 
     this.coordinates.x = this.coordinates.x + this.speed * this.lane.getNormalizedVector().x;
     this.coordinates.y = this.coordinates.y + this.speed * this.lane.getNormalizedVector().y;
