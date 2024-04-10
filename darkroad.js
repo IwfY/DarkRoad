@@ -276,6 +276,7 @@ function Car(engine, lane, id) {
     this.lightingUp = null;
     this.lights = [];
     this.frontLights = [];
+    this.lightToCenterDistance = getRandomInt(24, 29) / 10.0;
 }
 
 Car.prototype.drawInit = function (g) {
@@ -291,12 +292,12 @@ Car.prototype.drawInit = function (g) {
             }
         }
 
-        var leftLight = new Light(this, 'left', { 'x': -3, 'y': 0, 'z': -3 }, color);
+        var leftLight = new Light(this, 'left', { 'x': -this.lightToCenterDistance, 'y': 0, 'z': -3 }, color);
         leftLight.drawInit(g);
         this.lights.push(leftLight);
         this.frontLights.push(leftLight);
 
-        var rightLight = new Light(this, 'left', { 'x': 3, 'y': 0, 'z': -3 }, color);
+        var rightLight = new Light(this, 'left', { 'x': this.lightToCenterDistance, 'y': 0, 'z': -3 }, color);
         rightLight.drawInit(g);
         this.lights.push(rightLight);
         this.frontLights.push(rightLight);
@@ -305,11 +306,11 @@ Car.prototype.drawInit = function (g) {
     else {
         var color = 'red';
 
-        var leftLight = new Light(this, 'left', { 'x': -3, 'y': 0, 'z': -3 }, color);
+        var leftLight = new Light(this, 'left', { 'x': -this.lightToCenterDistance, 'y': 0, 'z': -3 }, color);
         leftLight.drawInit(g);
         this.lights.push(leftLight);
 
-        var rightLight = new Light(this, 'left', { 'x': 3, 'y': 0, 'z': -3 }, color);
+        var rightLight = new Light(this, 'left', { 'x': this.lightToCenterDistance, 'y': 0, 'z': -3 }, color);
         rightLight.drawInit(g);
         this.lights.push(rightLight);
     }
@@ -411,10 +412,10 @@ PoliceCar.prototype.remove = function (g) {
 
 PoliceCar.prototype.update = function (g) {
     var side = this.flashCount >= 0 ? 1 : -1;
-    var leftScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x - 3, this.coordinates.y, this.coordinates.z);
-    var rightScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x + 3, this.coordinates.y, this.coordinates.z);
-    var flashLeftScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x + 2.6, this.coordinates.y + 5, this.coordinates.z + 1);
-    var flashRightScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x - 2.6, this.coordinates.y + 5, this.coordinates.z + 1);
+    var leftScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x - 2.7, this.coordinates.y, this.coordinates.z);
+    var rightScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x + 2.7, this.coordinates.y, this.coordinates.z);
+    var flashLeftScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x + 2.4, this.coordinates.y + 5, this.coordinates.z + 1);
+    var flashRightScreenCoords = worldToScreen(this.engine.screenWidth, this.engine.screenHeight, this.coordinates.x - 2.4, this.coordinates.y + 5, this.coordinates.z + 1);
     var r = (rightScreenCoords[0] - leftScreenCoords[0]) / 10;
 
     // lighting up
