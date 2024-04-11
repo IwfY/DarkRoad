@@ -531,8 +531,9 @@ Building.prototype.update = function () {
     }
 };
 
-function City(engine) {
+function City(engine, depth) {
     this.engine = engine;
+    this.depth = depth; // max value == furthest away city is 100
     this.cityG = null;
     this.horizonY = null;
     this.centerX = getRandomInt(0, this.engine.screenWidth);
@@ -547,9 +548,18 @@ City.prototype.drawInit = function (g) {
     var i, building;
     this.cityG = g.append('g');
 
-    for (i = 0; i < 9; ++i) {
+    var scaleFactor = Math.sqrt(130 / this.depth);
+    var buildingScaleFactor = scaleFactor * 0.8;
+    var numberOfBuildings = getRandomInt(6, 12);
+
+    for (i = 0; i < numberOfBuildings; ++i) {
         building = new Building(this.engine);
-        building.drawInit(this.cityG, this.centerX + getRandomInt(-80, 80), this.horizonY, getRandomInt(10, 25), getRandomInt(10, 90));
+        building.drawInit(this.cityG,
+            this.centerX + getRandomInt(-80 * scaleFactor, 80 * scaleFactor),
+            this.horizonY,
+            getRandomInt(10 * buildingScaleFactor, 25 * buildingScaleFactor), // width
+            getRandomInt(15 * buildingScaleFactor, 80 * buildingScaleFactor)) // height
+        ;
 
         this.buildings.push(building);
     }
@@ -786,6 +796,7 @@ function DarkRoad() {
     this.lastLane = 0;
     this.cities = [];
     this.cityCount = getRandomInt(3, 7);
+    this.initialCityDepth = 100 - getRandomInt(1, 20); // farthest city is drawn first
 
     this.screenWidth = d3.select('#dark-road').style('width').replace("px", "") - 10;
     this.screenHeight = d3.select('#dark-road').style('height').replace("px", "") - 10;
@@ -821,11 +832,13 @@ function DarkRoad() {
     this.sky.setHeight(horizon[1]);
     this.sky.drawInit(this.g);
 
-    for (i = 0; i < this.cityCount; ++i) {
-        var city = new City(this);
+    var cityDepth = this.initialCityDepth;
+    for (var i = 0; i < this.cityCount; ++i) {
+        var city = new City(this, cityDepth);
         city.setHorizonY(horizon[1]);
         city.drawInit(this.g);
         this.cities.push(city);
+        cityDepth -= getRandomInt(1, 20);
     }
 
     var lane1 = new Lane(this, { 'x': -28, 'y': this.laneHeight, 'z': -10 }, { 'x': -28, 'y': this.laneHeight, 'z': 1500 });
