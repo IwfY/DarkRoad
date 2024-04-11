@@ -473,29 +473,7 @@ function Building(engine) {
 };
 
 Building.prototype.drawInit = function (g, x, horizonY, width, height) {
-    var orangeSideBrightness = getRandomInt(2, 8) / 10;
-
-    var buildingSideGradient = this.engine.svg
-        .insert('defs', ":first-child")
-        .append('linearGradient')
-        .attr('id', 'building-side-gradient')
-        .attr('x1', 0)
-        .attr('x2', 0)
-        .attr('y1', 0)
-        .attr('y2', 0.95)
-    ;
-    buildingSideGradient // white
-        .append('stop')
-        .attr('offset', '0%')
-        .attr('stop-color', 'rgb(' + orangeSideBrightness * (160 + getRandomInt(-10, 10)) + ',' + orangeSideBrightness * (80 + getRandomInt(-10, 10)) + ',' + orangeSideBrightness * (50 + getRandomInt(-10, 10)) + ')')
-    ;
-    buildingSideGradient // black
-        .append('stop')
-        .attr('offset', '100%')
-        .attr('stop-color', '#000')
-    ;
-
-    this.buildingRect = g.append('rect')
+    this.buildingRectSide = g.append('rect')
         .attr('x', x + 2)
         .attr('y', horizonY - height + 2)
         .attr('width', width)
@@ -531,6 +509,64 @@ Building.prototype.update = function () {
     }
 };
 
+
+/**
+ * ComTower
+ **/
+function ComTower(engine) {
+    this.engine = engine;
+    this.elements = [];
+};
+
+ComTower.prototype.drawInit = function (g, x, horizonY, height) {
+    var tower = g.append('polygon')
+        .attr('points', `${x - 5},${horizonY} ${x + 5},${horizonY} ${x + 2},${horizonY - height * 0.7} ${x + 1},${horizonY - height} ${x - 1},${horizonY - height} ${x - 2},${horizonY - height * 0.7}`)
+        .attr('fill', 'rgb(' + getRandomInt(0, 4) + ',' + getRandomInt(0, 4) + ',' + getRandomInt(0, 4) + ')')
+    ;
+    this.elements.push(tower);
+
+    var towerSide = g.append('line')
+        .attr('x1', x + 5)
+        .attr('y1', horizonY)
+        .attr('x2', x + 2)
+        .attr('y2', horizonY - height * 0.7)
+        .attr('stroke', 'url(#building-side-gradient)')
+    ;
+    this.elements.push(towerSide);
+
+    var observationDeck = g.append('polygon')
+        .attr('points', `${x - 6},${horizonY - height * 0.6} ${x + 6},${horizonY - height * 0.6} ${x + 8},${horizonY - height * 0.7} ${x - 8},${horizonY - height * 0.7}`)
+        .attr('fill', 'rgb(' + getRandomInt(0, 4) + ',' + getRandomInt(0, 4) + ',' + getRandomInt(0, 4) + ')')
+    ;
+    this.elements.push(observationDeck);
+
+    var observationDeckLight = g.append('line')
+        .attr('x1', x - 4)
+        .attr('y1', horizonY - height * 0.66)
+        .attr('x2', x + 4)
+        .attr('y2', horizonY - height * 0.66)
+        .attr('stroke', '#242411')
+        .attr('stroke-width', '1.6')
+    ;
+    this.elements.push(observationDeckLight);
+
+    var observationDeckSide = g.append('polygon')
+        .attr('points', `${x + 6},${horizonY - height * 0.6} ${x + 8},${horizonY - height * 0.7} ${x + 7},${horizonY - height * 0.7}`)
+        .attr('fill', this.engine.orangeRGB)
+    ;
+    this.elements.push(observationDeckSide);
+
+    var antennaSide = g.append('line')
+        .attr('x1', x+2)
+        .attr('y1', horizonY - height * 0.7)
+        .attr('x2', x + 1)
+        .attr('y2', horizonY - height * 1)
+        .attr('stroke', this.engine.orangeRGB)
+    ;
+    this.elements.push(antennaSide);
+
+}
+
 function City(engine, depth) {
     this.engine = engine;
     this.depth = depth; // max value == furthest away city is 100
@@ -538,6 +574,7 @@ function City(engine, depth) {
     this.horizonY = null;
     this.centerX = getRandomInt(0, this.engine.screenWidth);
     this.buildings = [];
+    this.comTower = null;
 }
 
 City.prototype.setHorizonY = function (horizonY) {
@@ -550,7 +587,16 @@ City.prototype.drawInit = function (g) {
 
     var scaleFactor = Math.sqrt(130 / this.depth);
     var buildingScaleFactor = scaleFactor * 0.8;
-    var numberOfBuildings = getRandomInt(6, 12);
+    var numberOfBuildings = getRandomInt(6, 13);
+
+    if (getRandomInt(0, 8) === 3) {
+        this.comTower = new ComTower(this.engine);
+        this.comTower.drawInit(this.cityG,
+            this.centerX + getRandomInt(-90 * scaleFactor, 90 * scaleFactor),
+            this.horizonY,
+            getRandomInt(75 * buildingScaleFactor, 120 * buildingScaleFactor)
+        );
+    }
 
     for (i = 0; i < numberOfBuildings; ++i) {
         building = new Building(this.engine);
@@ -812,6 +858,29 @@ function DarkRoad() {
         .attr('version', '1.1')
         .attr('xmlns', 'http://www.w3.org/2000/svg');
     this.g = this.svg.append('g');
+
+
+    this.orangeSideBrightness = getRandomInt(2, 8) / 10;
+    this.orangeRGB = `rgb(${this.orangeSideBrightness * (160 + getRandomInt(-10, 10))},${this.orangeSideBrightness * (80 + getRandomInt(-10, 10))},${this.orangeSideBrightness * (50 + getRandomInt(-10, 10))})`;
+    var buildingSideGradient = this.svg
+        .insert('defs', ":first-child")
+        .append('linearGradient')
+        .attr('id', 'building-side-gradient')
+        .attr('x1', 0)
+        .attr('x2', 0)
+        .attr('y1', 0)
+        .attr('y2', 0.95)
+    ;
+    buildingSideGradient // white
+        .append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', this.orangeRGB)
+    ;
+    buildingSideGradient // black
+        .append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', '#000')
+    ;
 
     // ground
     this.g.append('rect')
